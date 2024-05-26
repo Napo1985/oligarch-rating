@@ -23,20 +23,23 @@ public class OligarchRatingService {
     @Autowired
     private ExternalApiServiceInterface externalApiService;
 
-    public OligarchEntity save(PersonEntity personEntity) {
+    private final Object lock = new Object();
 
+    public OligarchEntity save(PersonEntity personEntity) {
         Double cashValue = externalApiService.evaluateCash(personEntity.getFinancialAssets().getCashAmount(), personEntity.getFinancialAssets().getCurrency());
         Double bitcoinValue = externalApiService.getBitcoinValue();
         Double oligarchThreshold = externalApiService.getOligarchThreshold();
         Double totalAssetsValue = cashValue + (bitcoinValue * personEntity.getFinancialAssets().getBitcoinAmount());
 
         Oligarch oligarch = null;
-        if (totalAssetsValue.compareTo(oligarchThreshold) > 0) {
-            Optional<Oligarch> resultOligarch = oligarchRepository.findById(personEntity.getId());
-            if (resultOligarch.isPresent()) {
-                throw new DuplicationException("id:" + personEntity.getId() + " already found");
-            }
+        synchronized (lock) {
+            if (totalAssetsValue.compareTo(oligarchThreshold) > 0) {
 
+                Optional<Oligarch> resultOligarch = oligarchRepository.findById(personEntity.getId());
+                if (resultOligarch.isPresent()) {
+                    throw new DuplicationException("id:" + personEntity.getId() + " already found");
+                }
+            }
             oligarch = new Oligarch(personEntity.getId(), personEntity.getFirstName(), personEntity.getLastName(), totalAssetsValue.longValue());
             oligarchRepository.save(oligarch);
         }
