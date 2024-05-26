@@ -2,11 +2,16 @@ package org.example.oligarchrating.web.dto;
 
 import lombok.Data;
 
-import java.math.BigDecimal;
-
 @Data
 public class FinancialAssetsDto {
-    private BigDecimal cashAmount;
+    private Double cashAmount;
     private String currency;
-    private int bitcoinAmount;
+    private Long bitcoinAmount;
+
+    public FinancialAssetsDto(Double cashAmount, String currency, Long bitcoinAmount) {
+        this.cashAmount = cashAmount;
+        this.currency = currency;
+        this.bitcoinAmount = bitcoinAmount;
+    }
 }
+

@@ -1,4 +1,4 @@
-package org.example.oligarchrating.domain.model;
+package org.example.oligarchrating.infrastructure.repository.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Oligarch {
+
     @Id
     private Long id;
     private String firstName;

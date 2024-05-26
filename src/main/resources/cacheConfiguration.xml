@@ -6,7 +6,7 @@
 
     <cache alias="oligarchCache">
         <key-type>java.lang.Long</key-type>
-        <value-type>org.example.oligarchrating.domain.model.Oligarch</value-type>
+        <value-type>org.example.oligarchrating.infrastructure.repository.model.Oligarch</value-type>
         <expiry>
             <ttl unit="minutes">10</ttl>
         </expiry>

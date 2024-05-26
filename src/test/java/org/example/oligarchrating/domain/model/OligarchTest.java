@@ -1,5 +1,6 @@
 package org.example.oligarchrating.domain.model;
 
+import org.example.oligarchrating.infrastructure.repository.model.Oligarch;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

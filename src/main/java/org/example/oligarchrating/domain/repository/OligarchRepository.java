@@ -1,6 +1,6 @@
 package org.example.oligarchrating.domain.repository;
 
-import org.example.oligarchrating.domain.model.Oligarch;
+import org.example.oligarchrating.infrastructure.repository.model.Oligarch;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;

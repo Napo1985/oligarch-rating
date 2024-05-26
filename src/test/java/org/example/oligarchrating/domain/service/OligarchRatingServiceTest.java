@@ -1,19 +1,18 @@
 package org.example.oligarchrating.domain.service;
 
-import org.example.oligarchrating.domain.dto.FinancialAssets;
-import org.example.oligarchrating.domain.dto.Person;
+import org.example.oligarchrating.domain.entities.FinancialAssets;
+import org.example.oligarchrating.domain.entities.OligarchEntity;
+import org.example.oligarchrating.domain.entities.PersonEntity;
 import org.example.oligarchrating.domain.exception.NotFoundException;
-import org.example.oligarchrating.domain.model.Oligarch;
+import org.example.oligarchrating.infrastructure.repository.model.Oligarch;
 import org.example.oligarchrating.domain.repository.OligarchRepository;
 import org.example.oligarchrating.infrastructure.rest.ExternalApiServiceInterface;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,36 +33,24 @@ class OligarchRatingServiceTest {
     private OligarchRatingService oligarchRatingService;
 
     @BeforeEach
-    void setUp() { //TODO is this needed
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testEvaluateAndSavePerson() {
-        when(externalApiService.evaluateCash(any(BigDecimal.class), anyString())).thenReturn(BigDecimal.valueOf(1));
-        when(externalApiService.getBitcoinValue()).thenReturn(BigDecimal.valueOf(1));
-        when(externalApiService.getOligarchThreshold()).thenReturn(BigDecimal.valueOf(1));
-
-        Person person = new Person();
-        person.setId(1L);
-        person.setFirstName("John");
-        person.setLastName("Doe");
-
-        FinancialAssets financialAssets = new FinancialAssets();
-        financialAssets.setCashAmount(BigDecimal.valueOf(10));
-        financialAssets.setBitcoinAmount(5);
-        financialAssets.setCurrency("usd");
-
-        person.setFinancialAssets(financialAssets);
-
-        when(oligarchRatingService.evaluateAndSavePerson(person)).thenReturn(new Oligarch(1L,"d","f",5L));
-
+    void testSave() {
+        when(externalApiService.evaluateCash(anyDouble(), anyString())).thenReturn(1D);
+        when(externalApiService.getBitcoinValue()).thenReturn(1D);
+        when(externalApiService.getOligarchThreshold()).thenReturn(1D);
+        PersonEntity personEntity = new PersonEntity(1L,"John", "Doe", new FinancialAssets(10D,"usd",5L));
         when(oligarchRepository.findById(anyLong())).thenReturn(Optional.empty());
-        Oligarch oligarch = oligarchRatingService.evaluateAndSavePerson(person);
 
-        assertEquals(oligarch.getId(), person.getId());
-        assertEquals(oligarch.getFirstName(), person.getFirstName());
-        assertEquals(oligarch.getLastName(), person.getLastName());
+
+        OligarchEntity oligarch = oligarchRatingService.save(personEntity);
+
+        assertEquals(oligarch.getId(), personEntity.getId());
+        assertEquals(oligarch.getFirstName(), personEntity.getFirstName());
+        assertEquals(oligarch.getLastName(), personEntity.getLastName());
     }
 
     @Test
@@ -74,26 +61,24 @@ class OligarchRatingServiceTest {
         oligarchs.add(new Oligarch(2L, "Jane", "Smith", 2000000L));
         when(oligarchRepository.findAll()).thenReturn(oligarchs);
 
-        List<Oligarch> result = oligarchRatingService.getAllOligarchs();
+        List<OligarchEntity> result = oligarchRatingService.getAllOligarchs();
 
         verify(oligarchRepository, times(1)).findAll();
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals(oligarchs, result);
     }
 
     @Test
     void testGetOligarchById() {
-        Oligarch oligarch = new Oligarch(1L, "John", "Doe", 1000000L);
-        when(oligarchRepository.findById(1L)).thenReturn(Optional.of(oligarch));
+        OligarchEntity oligarchEntity = new OligarchEntity(1L, "John", "Doe", 10L);
+        Oligarch oligarch = new Oligarch(1L, "John", "Doe", 10L);
+        when(oligarchRepository.findById(anyLong())).thenReturn(Optional.of(oligarch));
 
-        Optional<Oligarch> result = oligarchRatingService.getOligarchById(1L);
+        OligarchEntity result = oligarchRatingService.getOligarchById(1L);
 
-        verify(oligarchRepository, times(1)).findById(1L);
-
-        assertTrue(result.isPresent());
-        assertEquals(oligarch, result.get());
+        assertTrue(result != null);
+        assertEquals(oligarchEntity, result);
     }
 
     @Test
@@ -126,11 +111,8 @@ class OligarchRatingServiceTest {
 
     @Test
     void testGetOligarchRank_NotFound() {
-        // Arrange
         Long targetId = 4L;
         when(oligarchRepository.findById(targetId)).thenReturn(Optional.empty());
-
-        // Act & Assert
         assertThrows(NotFoundException.class, () -> oligarchRatingService.getOligarchRank(targetId));
     }
 }

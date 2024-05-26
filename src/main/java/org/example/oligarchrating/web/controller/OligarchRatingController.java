@@ -1,19 +1,16 @@
 package org.example.oligarchrating.web.controller;
 
-import org.example.oligarchrating.domain.dto.FinancialAssets;
-import org.example.oligarchrating.domain.model.Oligarch;
-import org.example.oligarchrating.domain.dto.Person;
+import org.example.oligarchrating.domain.entities.FinancialAssets;
+import org.example.oligarchrating.domain.entities.OligarchEntity;
+import org.example.oligarchrating.domain.entities.PersonEntity;
 import org.example.oligarchrating.domain.service.OligarchRatingService;
-import org.example.oligarchrating.web.dto.FinancialAssetsDto;
-import org.example.oligarchrating.web.dto.PersonInformationDto;
-import org.example.oligarchrating.web.dto.RequestDto;
+import org.example.oligarchrating.web.dto.OligarchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/oligarch-rating")
@@ -22,47 +19,39 @@ public class OligarchRatingController {
     @Autowired
     private OligarchRatingService oligarchRatingService;
 
-    @PostMapping("/evaluate")
-    public ResponseEntity<Oligarch> evaluatePerson(@RequestBody RequestDto requestDto) throws ChangeSetPersister.NotFoundException {
-        Person person = convertToEntity(requestDto);
-        Oligarch savedOligarch = oligarchRatingService.evaluateAndSavePerson(person);
+    @PostMapping("/oligarch")
+    public ResponseEntity<OligarchEntity> oligarch (@RequestBody OligarchRequest oligarchRequest) throws ChangeSetPersister.NotFoundException {
+        PersonEntity personEntity = convertToEntity(oligarchRequest);
+        OligarchEntity savedOligarch = oligarchRatingService.save(personEntity);
         return ResponseEntity.ok(savedOligarch);
     }
 
-    @GetMapping("/oligarchs")
-    public List<Oligarch> getAllOligarchs() {
+    @GetMapping("/oligarch/all")
+    public List<OligarchEntity> getAllOligarchs() {
         return oligarchRatingService.getAllOligarchs();
     }
 
-    @GetMapping("/oligarchs/{id}")
-    public ResponseEntity<Oligarch> getOligarchById(@PathVariable Long id) {
-        Optional<Oligarch> oligarch = oligarchRatingService.getOligarchById(id);
-        return oligarch.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("/oligarch/{id}")
+    public ResponseEntity<OligarchEntity> getOligarchById(@PathVariable Long id) {
+        OligarchEntity oligarch = oligarchRatingService.getOligarchById(id);
+        return ResponseEntity.ok(oligarch);
     }
 
-    @GetMapping("/oligarchs/rank/{id}")
+    @GetMapping("/oligarch/rank/{id}")
     public ResponseEntity<String> getOligarchRank(@PathVariable Long id) {
         int oligarchRank = oligarchRatingService.getOligarchRank(id);
-        return ResponseEntity.ok("Person ID:" + id + " is ranked " + oligarchRank + " in the world’s oligarchs");
+        return ResponseEntity.ok("PersonEntity ID:" + id + " is ranked " + oligarchRank + " in the world’s oligarchs");
     }
 
 
-    private Person convertToEntity(RequestDto requestDto) {
-        Person person = new Person();
+    private PersonEntity convertToEntity(OligarchRequest oligarchRequest) {
+        return new PersonEntity(
+                oligarchRequest.getId(),
+                oligarchRequest.getPersonInformation().getFirstName(),
+                oligarchRequest.getPersonInformation().getLastName(),
+                new FinancialAssets(oligarchRequest.getFinancialAssets().getCashAmount(),
+                        oligarchRequest.getFinancialAssets().getCurrency(),
+                        oligarchRequest.getFinancialAssets().getBitcoinAmount()));
 
-        PersonInformationDto personInformation = requestDto.getPersonInformation();
-        person.setId(requestDto.getId());
-        person.setFirstName(personInformation.getFirstName());
-        person.setLastName(personInformation.getLastName());
-
-        FinancialAssetsDto financialAssets = requestDto.getFinancialAssets();
-        FinancialAssets assets = new FinancialAssets();
-        assets.setCashAmount(financialAssets.getCashAmount());
-        assets.setCurrency(financialAssets.getCurrency());
-        assets.setBitcoinAmount(financialAssets.getBitcoinAmount());
-
-        person.setFinancialAssets(assets);
-
-        return person;
     }
 }

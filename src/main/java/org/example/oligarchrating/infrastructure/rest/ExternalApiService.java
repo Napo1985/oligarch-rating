@@ -1,9 +1,6 @@
 package org.example.oligarchrating.infrastructure.rest;
 
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import java.math.BigDecimal;
 
 public class ExternalApiService  implements ExternalApiServiceInterface {
 
@@ -13,18 +10,18 @@ public class ExternalApiService  implements ExternalApiServiceInterface {
         this.restTemplate = restTemplate;
     }
 
-    public BigDecimal evaluateCash(BigDecimal amount, String localCurrency) {
+    public Double evaluateCash(Double amount, String localCurrency) {
         String url = "http://assets-valuation/cash/evaluate?amount=" + amount + "&localCurrency=" + localCurrency;
-        return restTemplate.getForObject(url, BigDecimal.class);
+        return restTemplate.getForObject(url, Double.class);
     }
 
-    public BigDecimal getBitcoinValue() {
+    public Double getBitcoinValue() {
         String url = "http://assets-valuation/bitcoin/value";
-        return restTemplate.getForObject(url, BigDecimal.class);
+        return restTemplate.getForObject(url, Double.class);
     }
 
-    public BigDecimal getOligarchThreshold() {
+    public Double getOligarchThreshold() {
         String url = "http://oligarch-helper/oligarch-threshold";
-        return restTemplate.getForObject(url, BigDecimal.class);
+        return restTemplate.getForObject(url, Double.class);
     }
 }

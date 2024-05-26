@@ -1,15 +1,15 @@
 package org.example.oligarchrating.domain.service;
 
-import org.example.oligarchrating.domain.dto.Person;
+import org.example.oligarchrating.domain.entities.OligarchEntity;
+import org.example.oligarchrating.domain.entities.PersonEntity;
 import org.example.oligarchrating.domain.exception.DuplicationException;
 import org.example.oligarchrating.domain.exception.NotFoundException;
-import org.example.oligarchrating.domain.model.Oligarch;
+import org.example.oligarchrating.infrastructure.repository.model.Oligarch;
 import org.example.oligarchrating.domain.repository.OligarchRepository;
 import org.example.oligarchrating.infrastructure.rest.ExternalApiServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,40 +23,39 @@ public class OligarchRatingService {
     @Autowired
     private ExternalApiServiceInterface externalApiService;
 
-    public Oligarch evaluateAndSavePerson(Person person){
+    public OligarchEntity save(PersonEntity personEntity) {
 
-        BigDecimal cashValue = externalApiService.evaluateCash(person.getFinancialAssets().getCashAmount(), person.getFinancialAssets().getCurrency());
-        BigDecimal bitcoinValue = externalApiService.getBitcoinValue();
-        BigDecimal oligarchThreshold = externalApiService.getOligarchThreshold();
-
-        BigDecimal totalAssetsValue = cashValue.add(BigDecimal.valueOf(person.getFinancialAssets().getBitcoinAmount()).multiply(bitcoinValue));
+        Double cashValue = externalApiService.evaluateCash(personEntity.getFinancialAssets().getCashAmount(), personEntity.getFinancialAssets().getCurrency());
+        Double bitcoinValue = externalApiService.getBitcoinValue();
+        Double oligarchThreshold = externalApiService.getOligarchThreshold();
+        Double totalAssetsValue = cashValue + (bitcoinValue * personEntity.getFinancialAssets().getBitcoinAmount());
 
         Oligarch oligarch = null;
         if (totalAssetsValue.compareTo(oligarchThreshold) > 0) {
-            Optional<Oligarch> resultOligarch = oligarchRepository.findById(person.getId());
+            Optional<Oligarch> resultOligarch = oligarchRepository.findById(personEntity.getId());
             if (resultOligarch.isPresent()) {
-                throw new DuplicationException("id:" + person.getId() + " already found");
+                throw new DuplicationException("id:" + personEntity.getId() + " already found");
             }
-            oligarch = new Oligarch(person.getId(), person.getFirstName(), person.getLastName(), totalAssetsValue.longValue());
+
+            oligarch = new Oligarch(personEntity.getId(), personEntity.getFirstName(), personEntity.getLastName(), totalAssetsValue.longValue());
             oligarchRepository.save(oligarch);
         }
-        return oligarch;
+        return new OligarchEntity(oligarch.getId(), oligarch.getFirstName(), oligarch.getLastName(), oligarch.getAssetsValue());
     }
 
-    public List<Oligarch> getAllOligarchs() {
-        return oligarchRepository.findAll();
+    public List<OligarchEntity> getAllOligarchs() {
+        return oligarchRepository.findAll().stream()
+                .map(oligarch -> new OligarchEntity(oligarch.getId(), oligarch.getFirstName(), oligarch.getLastName(), oligarch.getAssetsValue()))
+                .collect(Collectors.toList());
     }
 
-    public Optional<Oligarch> getOligarchById(Long id) {
-        Optional<Oligarch> oligarch = oligarchRepository.findById(id);
-        if (oligarch.isEmpty()) {
-            throw new NotFoundException("id:" + id + " not found");
-        }
-        return oligarch;
+    public OligarchEntity getOligarchById(Long id) {
+        Oligarch oligarch = oligarchRepository.findById(id).orElseThrow(() -> new NotFoundException("id:" + id + " not found"));
+        return new OligarchEntity(oligarch.getId(), oligarch.getFirstName(), oligarch.getLastName(), oligarch.getAssetsValue());
     }
 
     public int getOligarchRank(Long id) {
-        Oligarch oligarch = oligarchRepository.findById(id).orElseThrow(() ->  new NotFoundException("id:" + id + " not found"));
+        Oligarch oligarch = oligarchRepository.findById(id).orElseThrow(() -> new NotFoundException("id:" + id + " not found"));
         List<Oligarch> sortedOligarchs = getSortedOligarchs();
         return findRank(sortedOligarchs, oligarch);
     }

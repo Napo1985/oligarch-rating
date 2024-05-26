@@ -3,9 +3,9 @@ package org.example.oligarchrating.infrastructure.rest;
 import java.math.BigDecimal;
 
 public interface ExternalApiServiceInterface {
-    BigDecimal evaluateCash(BigDecimal amount, String localCurrency);
+    Double evaluateCash(Double amount, String localCurrency);
 
-    BigDecimal getBitcoinValue();
+    Double getBitcoinValue();
 
-    BigDecimal getOligarchThreshold();
+    Double getOligarchThreshold();
 }

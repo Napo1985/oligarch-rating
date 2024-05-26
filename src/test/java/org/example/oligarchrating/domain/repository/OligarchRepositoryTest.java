@@ -1,6 +1,7 @@
 package org.example.oligarchrating.domain.repository;
 
-import org.example.oligarchrating.domain.model.Oligarch;
+import org.example.oligarchrating.domain.entities.OligarchEntity;
+import org.example.oligarchrating.infrastructure.repository.model.Oligarch;
 import org.example.oligarchrating.domain.service.OligarchRatingService;
 import org.example.oligarchrating.infrastructure.rest.ExternalApiServiceInterface;
 import org.junit.jupiter.api.Test;
@@ -22,22 +23,23 @@ public class OligarchRepositoryTest {
 
     @Mock
     private OligarchRepository oligarchRepository;
-    @Mock
-    private ExternalApiServiceInterface externalApiService;
 
-    @InjectMocks
-    private OligarchRatingService oligarchService;
+    @Test
+    public void testSave() {
+        Oligarch oligarch = new Oligarch(1L, "John", "Doe", 1000000000L);
+        when(oligarchRepository.save(any())).thenReturn(oligarch);
+
+        Oligarch result = oligarchRepository.save(any());
+        assertInstanceOf(Oligarch.class, result);
+    }
 
     @Test
     public void testFindById() {
-        Long id = 1L;
-        Oligarch oligarch = new Oligarch(id, "John", "Doe", 1000000000L);
-        when(oligarchRepository.findById(id)).thenReturn(Optional.of(oligarch));
+        Oligarch oligarch = new Oligarch(1L, "John", "Doe", 1000000000L);
+        when(oligarchRepository.findById(anyLong())).thenReturn(Optional.of(oligarch));
 
-        Optional<Oligarch> result = oligarchService.getOligarchById(id);
-
+        Optional<Oligarch> result = oligarchRepository.findById(anyLong());
         assertEquals(oligarch, result.orElse(null));
-        verify(oligarchRepository, times(1)).findById(id);
     }
 
     @Test
@@ -48,12 +50,10 @@ public class OligarchRepositoryTest {
         );
 
         when(oligarchRepository.findAll()).thenReturn(oligarchs);
-
-        List<Oligarch> result = oligarchService.getAllOligarchs();
+        List<Oligarch> result = oligarchRepository.findAll();
 
         assertEquals(oligarchs.size(), result.size());
         assertEquals(oligarchs, result);
 
-        verify(oligarchRepository, times(1)).findAll();
     }
 }

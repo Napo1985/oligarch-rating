@@ -1,17 +1,15 @@
-package org.example.oligarchrating.domain.dto;
+package org.example.oligarchrating.domain.entities;
 
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class FinancialAssets {
-    private BigDecimal cashAmount;
+    private Double cashAmount;
     private String currency;
-    private int bitcoinAmount;
+    private Long bitcoinAmount;
 }
